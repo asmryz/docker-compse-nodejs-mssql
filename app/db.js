@@ -1,0 +1,36 @@
+import sql from 'mssql'
+
+const config = {
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    server: process.env.DB_HOST, // You can use 'localhost\\instance' to connect to named instance
+    database: process.env.DB_NAME,
+    encrypt: false,
+    trustServerCertificate: true,
+}
+
+// const sqlConfig = {
+//     user: 'asim',
+//     password: 'welcome123',
+//     database: 'check',
+//     server: '10.0.132.28',
+//     /* pool: {
+//        max: 10,
+//        min: 0,
+//        idleTimeoutMillis: 30000
+//      },*/
+//     options: {
+//         encrypt: false,
+//         trustServerCertificate: true,
+//     }
+// }
+
+
+export const connection = new sql.ConnectionPool(config).connect()
+    .then(p => {
+        console.log('Connected to MSSQL')
+        return p
+    })
+    .catch(err => console.log('Database Connection Failed! Bad Config: ', err))
+
+
