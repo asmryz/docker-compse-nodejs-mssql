@@ -1,3 +1,7 @@
+create login admin with password = 'admin', check_policy = off
+exec master..sp_addsrvrolemember @loginame = 'admin', @rolename = 'sysadmin'
+GRANT SELECT,UPDATE,INSERT,DELETE ON Silberschatz TO admin;
+
 DROP DATABASE Silberschatz
 
 CREATE DATABASE Silberschatz;

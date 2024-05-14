@@ -13,11 +13,19 @@ services:
             timeout: 3s
             retries: 10
             start_period: 10s
+
+    seed:
+        image: mcr.microsoft.com/mssql/server:2022-latest
         volumes:
-            - ./sql-scripts:/usr/src/db
-        working_dir: /usr/src/db
-        # run the entrypoint.sh that will import the data AND sqlserver
-        command: sh -c ' chmod +x ./entrypoint.sh; ./entrypoint.sh & /opt/mssql/bin/sqlservr;'
+            - ./sql-scripts:/docker-entrypoint-initdb.d
+        depends_on:
+            mssql:
+                condition: service_healthy
+        command:
+            - /bin/bash
+            - -c
+            - |
+              bash -c ' /opt/mssql-tools/bin/sqlcmd -S mssql -U sa -P dataBase@2334 -d master -i docker-entrypoint-initdb.d/init.sql;'
 
     app:
         image: node:18
@@ -30,15 +38,15 @@ services:
             - /bin/bash
             - -c
             - |
-                npm install
-                npm install -g nodemon
-                nodemon start
+              npm install
+              npm install -g nodemon
+              nodemon start
         restart: on-failure
         ports:
             - 4000:4000
         depends_on:
-            mssql:
-                condition: service_healthy
+            seed:
+                condition: service_completed_successfully
         environment:
             - DB_HOST=mssql
             - DB_USER=sa
@@ -48,20 +56,3 @@ services:
         stdin_open: true
         tty: true
 
-    # version: '3.8'
-
-    # services:
-    #   mssql:
-    #     image: mcr.microsoft.com/mssql/server:2012-latest
-    #     container_name: sql-server
-    #     environment:
-    #       - SA_PASSWORD=yourStrong(!)Password
-    #       - ACCEPT_EULA=Y
-    #     healthcheck:
-    #       test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-Usa", "-PyourStrong(!)Password", "-Q", "select 1"]
-    #       interval: 1s
-    #       retries: 20
-    # volumes:
-    #   - ./sql-scripts:/scripts
-    #     ports:
-    #       - "1435:1433"
